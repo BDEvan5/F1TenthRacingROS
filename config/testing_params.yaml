@@ -1,0 +1,10 @@
+# testing
+
+
+
+pure_pursuit:
+  ros__parameters: 
+    map_name: "levine_blocked"
+    n_laps: 2
+    
+

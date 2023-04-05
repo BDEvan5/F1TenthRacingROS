@@ -1,0 +1,16 @@
+
+free_thresh: 0.196
+# image: levine_blocked.pgm
+image: levine_blocked_filled.png
+negate: 0
+occupied_thresh: 0.65
+origin:
+- -5
+- -3.5
+- 0.0
+resolution: 0.05
+
+n_obs: 0
+obs_size: 0.5
+start_pose: [0, 0, 0]
+start_orientation: 1.5
