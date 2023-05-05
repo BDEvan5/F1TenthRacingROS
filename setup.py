@@ -14,6 +14,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*.py')),
         (os.path.join('share', package_name), glob('maps/*.csv')),
+        # (os.path.join('share', package_name), glob('f1tenth_racing/Utils/*.csv')),
+        # (os.path.join('share', package_name), glob('maps/*.csv')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

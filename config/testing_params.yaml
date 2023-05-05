@@ -4,7 +4,8 @@
 
 pure_pursuit:
   ros__parameters: 
-    map_name: "levine_blocked"
+    # map_name: "levine_blocked"
+    map_name: "aut"
     n_laps: 2
     
 

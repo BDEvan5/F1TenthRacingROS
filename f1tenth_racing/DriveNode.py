@@ -13,7 +13,6 @@ import numpy as np
 from copy import copy
 
 
-
 class DriveNode(Node):
     def __init__(self, node_name):
         super().__init__(node_name)
@@ -48,6 +47,7 @@ class DriveNode(Node):
         self.cmd_timer = self.create_timer(simulation_time, self.drive_callback)
 
         self.odom_subscriber = self.create_subscription(Odometry, 'ego_racecar/odom', self.odom_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, 'pf/pose/odom', self.odom_pf_callback, 10)
 
         self.current_drive_sub = self.create_subscription(AckermannDrive, 'ego_racecar/current_drive', self.current_drive_callback, 10)
 
@@ -60,6 +60,16 @@ class DriveNode(Node):
     def current_drive_callback(self, msg):
         self.steering_angle = msg.steering_angle
 
+    def odom_pf_callback(self, msg):
+        position = msg.pose.pose.position
+        pf_position = np.array([position.x, position.y])
+        pf_velocity = msg.twist.twist.linear.x
+
+        x, y, z = quaternion_to_euler_angle(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z)
+        pf_theta = z * np.pi / 180
+        
+        self.get_logger().info(f"PF Position: {pf_position} -- TruePos: {self.position} -> diff: {self.position - pf_position}")
+        
     def odom_callback(self, msg):
         position = msg.pose.pose.position
         self.position = np.array([position.x, position.y])

@@ -276,3 +276,6 @@ class Trajectory:
         plt.pause(0.00001)
 
 
+if __name__ == '__main__':
+    traj = Trajectory("levine_blocked")
+# 
