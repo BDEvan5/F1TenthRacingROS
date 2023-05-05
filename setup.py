@@ -27,6 +27,7 @@ setup(
     entry_points={
         'console_scripts': [
             'pure_pursuit=f1tenth_racing.PurePursuitNode:main',
+            'nn_agent=f1tenth_racing.AgentNode:main',
         ],
     },
 )
