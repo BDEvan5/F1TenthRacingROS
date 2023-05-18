@@ -3,16 +3,15 @@
 
 map_name: "aut"
 n_laps: 20
-speed_limit: 4
+speed_limit: 6
 directory: "/home/benjy/sim_ws/src/f1tenth_racing/"
 
 # agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_5_0"
-# agent_name: "AgentOff_SAC_endToEnd_gbr_train_8_8_0"
 # architecture: "endToEnd"
 
-agent_name: "AgentOff_SAC_TrajectoryFollower_mco_TAL_8_5_0"
-architecture: "trajectory"
+# agent_name: "AgentOff_SAC_TrajectoryFollower_mco_TAL_8_5_0"
+# architecture: "trajectory"
 
 
-# agent_name: "AgentOff_SAC_Game_mco_TAL_8_5_0"
-# architecture: "planning"
+agent_name: "AgentOff_SAC_Game_mco_TAL_8_5_0"
+architecture: "planning"
