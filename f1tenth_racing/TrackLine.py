@@ -20,10 +20,6 @@ class TrackLine:
         self.total_s = self.ss[-1]
         self.N = len(self.wpts)
         
-        if expand:
-            self._expand_wpts()
-            
-            
         self.diffs = self.wpts[1:,:] - self.wpts[:-1,:]
         self.l2s   = self.diffs[:,0]**2 + self.diffs[:,1]**2
 
@@ -32,7 +28,6 @@ class TrackLine:
 
 
     def load_centerline(self):
-        
         filename = self.directory + 'maps/' + self.map_name + '_centerline.csv'
         xs, ys, w_rs, w_ls = [0], [0], [], []
         with open(filename, 'r') as file:
@@ -58,6 +53,8 @@ class TrackLine:
         seg_lengths = np.linalg.norm(diffs, axis=1)
         self.ss = np.insert(np.cumsum(seg_lengths), 0, 0)
     
+        self.vs = np.zeros_like(xs)
+
     def load_raceline(self):
         track = []
         filename = self.directory + 'maps/' + self.map_name + "_raceline.csv"
@@ -76,25 +73,6 @@ class TrackLine:
         seg_lengths = np.linalg.norm(np.diff(self.wpts, axis=0), axis=1)
         self.ss = np.insert(np.cumsum(seg_lengths), 0, 0)
     
-    def _expand_wpts(self):
-        n = 5 # number of pts per orig pt 
-        dz = 1 / n
-        o_line = self.wpts
-        o_vs = self.vs
-        new_line = []
-        new_vs = []
-        for i in range(len(o_line)-1):
-            dd = sub_locations(o_line[i+1], o_line[i])
-            for j in range(n):
-                pt = add_locations(o_line[i], dd, dz*j)
-                new_line.append(pt)
-
-                dv = o_vs[i+1] - o_vs[i]
-                new_vs.append(o_vs[i] + dv * j * dz)
-
-        self.wpts = np.array(new_line)
-        self.vs = np.array(new_vs)
-
     def plot_wpts(self):
         plt.figure(1)
         plt.plot(self.wpts[:, 0], self.wpts[:, 1], 'b-')
