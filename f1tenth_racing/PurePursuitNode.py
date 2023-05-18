@@ -68,7 +68,6 @@ class PurePursuitNode(Node):
         self.cmd_timer = self.create_timer(simulation_time, self.drive_callback)
 
         self.odom_subscriber = self.create_subscription(Odometry, 'ego_racecar/odom', self.odom_callback, 10)
-        self.odom_subscriber = self.create_subscription(Odometry, 'pf/pose/odom', self.odom_pf_callback, 10)
 
         self.current_drive_sub = self.create_subscription(AckermannDrive, 'ego_racecar/current_drive', self.current_drive_callback, 10)
 
@@ -82,7 +81,7 @@ class PurePursuitNode(Node):
         self.trajectory = TrackLine(map_name, True)
         # self.trajectory = Trajectory(map_name)
 
-        self.lookahead = 1.5
+        self.lookahead = 1.4
         self.v_min_plan = 1
         self.wheelbase =  0.33
         self.max_steer = 0.4
@@ -142,6 +141,8 @@ class PurePursuitNode(Node):
         self.near_start = True
         self.toggle_list = 0
         self.lap_start_time = time.time()
+        
+        # self.ego_reset() # for debuggin the pf
 
     def drive_callback(self):
         if not self.running:
@@ -171,7 +172,9 @@ class PurePursuitNode(Node):
         speed, steering_angle = get_actuation(theta, lookahead_point, position, self.lookahead, self.wheelbase)
         steering_angle = np.clip(steering_angle, -self.max_steer, self.max_steer)
 
-        action = np.array([steering_angle, speed * 0.9])
+        # action = np.array([steering_angle, speed * 0.9])
+        action = np.array([steering_angle, speed * 0.8])
+        # action = np.array([steering_angle, 0.5])
         # action = np.array([steering_angle, self.vehicle_speed])
 
         return action
