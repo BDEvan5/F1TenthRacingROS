@@ -15,7 +15,7 @@ from argparse import Namespace
 
 import os
 import datetime
- 
+import csv
 
         
 def load_params(filename):
@@ -48,21 +48,23 @@ class ExperimentHistory:
         path += f"Run_{ct.month}_{ct.day}_{ct.hour}_{ct.minute}_{ct.second}/"
         ensure_path_exists(path)
 
-        self.states = np.array(self.states)
-        self.actions = np.array(self.actions)
         self.scans = np.array(self.scans)
-        np.save(path + f'{name}_states.npy', self.states)
-        np.save(path + f'{name}_actions.npy', self.actions)
-        np.save(path + f'{name}_scans.npy', self.scans)
- 
- 
+        np.save(path + f"{name}_scans", self.scans)
+        with open(path + f'{name}_states.csv', 'w') as f:
+            csvwriter = csv.writer(f) 
+            csvwriter.writerow(['X', "Y", "Theta", "Speed", "Steering"]) 
+            csvwriter.writerows(self.states)
+        with open(path + f'{name}_actions.csv', 'w') as f:
+            csvwriter = csv.writer(f) 
+            csvwriter.writerow(['Steering', "Speed"]) 
+            csvwriter.writerows(self.actions)
+
+
+
 class DriveNode(Node):
     def __init__(self, node_name):
         super().__init__(node_name)
         
-        # abstract variables
-        self.planner = None
-
         # current vehicle state
         self.position = np.array([0, 0])
         self.velocity = 0
@@ -149,7 +151,8 @@ class DriveNode(Node):
 
         action = self.calculate_action(observation)
 
-        self.experiment_history.add_data(self.position, action, self.scan)
+        state = observation['state']
+        self.experiment_history.add_data(state, action, self.scan)
 
         self.send_drive_message(action)
 
