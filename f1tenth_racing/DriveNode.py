@@ -44,9 +44,15 @@ class ExperimentHistory:
     def save_experiment(self, name):  
         path = f"Data/ResultsROS/{name}/"
         ensure_path_exists(path)
+        for i in range(100):
+            run_path  = f"Run_{i}/"
+            if os.path.exists(path + run_path): continue
+            os.mkdir(path + run_path)
+            break
+
+        path += run_path
         ct = datetime.datetime.now()
-        path += f"Run_{ct.month}_{ct.day}_{ct.hour}_{ct.minute}_{ct.second}/"
-        ensure_path_exists(path)
+        name = f"Run_{i}_{ct.month}_{ct.day}_{ct.hour}_{ct.minute}_{ct.second}"
 
         self.scans = np.array(self.scans)
         np.save(path + f"{name}_scans", self.scans)
@@ -59,6 +65,7 @@ class ExperimentHistory:
             csvwriter.writerow(['Steering', "Speed"]) 
             csvwriter.writerows(self.actions)
 
+        return path 
 
 
 class DriveNode(Node):

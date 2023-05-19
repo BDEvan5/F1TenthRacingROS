@@ -1,17 +1,18 @@
 
 
 
-map_name: "aut"
+map_name: "CornerHallE"
+# map_name: "aut"
 n_laps: 1
 speed_limit: 8
 directory: "/home/benjy/sim_ws/src/f1tenth_racing/"
 
-agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_5_0"
-architecture: "endToEnd"
+# agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_5_0"
+# architecture: "endToEnd"
 
 # agent_name: "AgentOff_SAC_TrajectoryFollower_mco_TAL_8_5_0"
 # architecture: "trajectory"
 
 
-# agent_name: "AgentOff_SAC_Game_mco_TAL_8_5_0"
-# architecture: "planning"
+agent_name: "AgentOff_SAC_Game_mco_TAL_8_5_0"
+architecture: "planning"

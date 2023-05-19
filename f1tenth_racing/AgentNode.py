@@ -9,7 +9,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 import time
 import math
 import torch     
-
+import yaml
 
 import numpy as np
 from copy import copy
@@ -180,8 +180,11 @@ class AgentNode(DriveNode):
         return action        
     
     def lap_complete_callback(self):
-        self.experiment_history.save_experiment(self.params.agent_name)
         self.send_drive_message([0, 0])
+        run_path = self.experiment_history.save_experiment(self.params.agent_name)
+        with open(run_path + "RunParams.yaml", 'w') as f:
+            yaml.dump(self.params, f)
+
 
 
 def main(args=None):
