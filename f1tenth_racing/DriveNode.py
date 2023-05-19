@@ -43,7 +43,7 @@ class ExperimentHistory:
 
     def save_experiment(self, name):  
         # path = f"Data/ResultsROS/{name}/"
-        path = f"Data/ResultsROS/{name}/"
+        path = f"Data/ResultsJetson/{name}/"
         ensure_path_exists(path)
         for i in range(100):
             run_path  = f"Run_{i}/"
@@ -90,7 +90,8 @@ class DriveNode(Node):
         self.lap_times = []
 
         self.logger = None
-        d = "/home/benjy/sim_ws/src/f1tenth_racing/"
+        d = "/home/jetson/f1tenth_ws/src/f1tenth_racing/"
+        # d = "/home/benjy/sim_ws/src/f1tenth_racing/"
         self.params = load_params(d + "config/params.yaml")
         self.n_laps = self.params.n_laps
 
