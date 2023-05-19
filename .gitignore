@@ -1,8 +1,6 @@
 
 *.pyc
 
-f1tenth_racing/__pycache__/PurePursuitNode.get_actuation-48.py38.1.nbc
-
 *.nbi
 
 *.nbc
