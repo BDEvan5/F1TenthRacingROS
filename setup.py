@@ -28,6 +28,7 @@ setup(
         'console_scripts': [
             'pure_pursuit=f1tenth_racing.PurePursuitNode:main',
             'nn_agent=f1tenth_racing.AgentNode:main',
+            'pp_agent=f1tenth_racing.PurePursuit:main',
         ],
     },
 )
