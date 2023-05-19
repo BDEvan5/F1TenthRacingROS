@@ -14,5 +14,9 @@ directory: "/home/benjy/sim_ws/src/f1tenth_racing/"
 # architecture: "trajectory"
 
 
-agent_name: "AgentOff_SAC_Game_mco_TAL_8_5_0"
-architecture: "planning"
+# agent_name: "AgentOff_SAC_Game_mco_TAL_8_5_0"
+# architecture: "planning"
+
+architecture: "pure_pursuit"
+agent_name: "PurePursuit"
+lookahead: 1.4
