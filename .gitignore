@@ -5,4 +5,4 @@
 
 *.nbc
 
-Data/PreTrained/*
+# Data/PreTrained/*
