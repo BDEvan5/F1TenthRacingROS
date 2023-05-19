@@ -51,8 +51,7 @@ class ExperimentHistory:
             break
 
         path += run_path
-        ct = datetime.datetime.now()
-        name = f"Run_{i}_{ct.month}_{ct.day}_{ct.hour}_{ct.minute}_{ct.second}"
+        name = f"Run_{i}"
 
         self.scans = np.array(self.scans)
         np.save(path + f"{name}_scans", self.scans)

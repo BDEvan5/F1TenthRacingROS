@@ -145,6 +145,7 @@ class TestSAC:
         action, log_prob = self.actor(state)
         
         return action.detach().numpy()
+import datetime
       
 
 class AgentNode(DriveNode):
@@ -182,8 +183,11 @@ class AgentNode(DriveNode):
     def lap_complete_callback(self):
         self.send_drive_message([0, 0])
         run_path = self.experiment_history.save_experiment(self.params.agent_name)
+        save_params = copy(self.params.__dict__)
+        ct = datetime.datetime.now()
+        save_params["time"] = f"{ct.month}_{ct.day}_{ct.hour}_{ct.minute}"
         with open(run_path + "RunParams.yaml", 'w') as f:
-            yaml.dump(self.params, f)
+            yaml.dump(save_params, f)
 
 
 
