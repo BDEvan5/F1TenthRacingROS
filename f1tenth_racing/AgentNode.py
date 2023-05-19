@@ -8,6 +8,7 @@ from ackermann_msgs.msg import AckermannDriveStamped, AckermannDrive
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import time
 import math
+import torch     
 
 
 import numpy as np
@@ -16,10 +17,6 @@ from copy import copy
 from f1tenth_racing.DriveNode import DriveNode
 from matplotlib import pyplot as plt
 from f1tenth_racing.TrackLine import TrackLine
-# from f1tenth_racing.Architectures import EndArchitecture, PlanningArchitecture, TrajectoryArchitecture
-
-
-
 
 
 NUM_BEAMS = 20
@@ -49,8 +46,8 @@ def extract_motion_variables(obs):
     return motion_variables
 
 def extract_waypoints(obs, track, n_waypoints):
-    pose = obs['state'][0:2]
-    idx, dists = track.get_trackline_segment(pose)
+    pose = obs['state'][0:3]
+    idx, dists = track.get_trackline_segment(pose[0:2])
     
     upcomings_inds = np.arange(idx, idx+n_waypoints)
     if idx + n_waypoints >= track.N:
@@ -58,8 +55,7 @@ def extract_waypoints(obs, track, n_waypoints):
         upcomings_inds[n_waypoints - n_start_pts:] = np.arange(0, n_start_pts)
         
     upcoming_pts = track.wpts[upcomings_inds]
-    
-    relative_pts = transform_waypoints(upcoming_pts, pose, obs['state'][2])
+    relative_pts = transform_waypoints(upcoming_pts, pose)
     relative_pts /= WAYPOINT_SCALE
 
     speeds = track.vs[upcomings_inds]
@@ -127,12 +123,11 @@ def transform_action(nn_action):
     return action
     
         
-def transform_waypoints(wpts, position, orientation):
-    new_pts = wpts - position
-    new_pts = new_pts @ np.array([[np.cos(orientation), -np.sin(orientation)], [np.sin(orientation), np.cos(orientation)]])
+def transform_waypoints(wpts, pose):
+    new_pts = wpts - pose[0:2]
+    new_pts = new_pts @ np.array([[np.cos(pose[2]), -np.sin(pose[2])], [np.sin(pose[2]), np.cos(pose[2])]])
     
     return new_pts
-    
 
 
 
@@ -141,7 +136,6 @@ architecture_dict = {"planning": PlanningArchitecture,
                      "endToEnd": EndArchitecture}
 
 
-import torch     
 class TestSAC:
     def __init__(self, filename, directory):
         self.actor = torch.load(directory + f'{filename}_actor.pth')
@@ -152,6 +146,7 @@ class TestSAC:
         
         return action.detach().numpy()
       
+
 class AgentNode(DriveNode):
     def __init__(self):
         super().__init__('nn_agent')
@@ -183,6 +178,10 @@ class AgentNode(DriveNode):
         action[1] = np.clip(action[1], 0, self.speed_limit)
 
         return action        
+    
+    def lap_complete_callback(self):
+        self.experiment_history.save_experiment(self.params.agent_name)
+        self.send_drive_message([0, 0])
 
 
 def main(args=None):

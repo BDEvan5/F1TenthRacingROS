@@ -13,6 +13,10 @@ import numpy as np
 from copy import copy
 from argparse import Namespace
 
+import os
+import datetime
+ 
+
         
 def load_params(filename):
     import yaml
@@ -22,6 +26,36 @@ def load_params(filename):
     return params
 
 
+def ensure_path_exists(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+class ExperimentHistory:
+    def __init__(self):
+        self.states = []
+        self.actions = []
+        self.scans = []
+
+    def add_data(self, state, action, scan):
+        self.states.append(state)
+        self.actions.append(action)
+        self.scans.append(scan)
+
+    def save_experiment(self, name):  
+        path = f"Data/ResultsROS/{name}/"
+        ensure_path_exists(path)
+        ct = datetime.datetime.now()
+        path += f"Run_{ct.month}_{ct.day}_{ct.hour}_{ct.minute}_{ct.second}/"
+        ensure_path_exists(path)
+
+        self.states = np.array(self.states)
+        self.actions = np.array(self.actions)
+        self.scans = np.array(self.scans)
+        np.save(path + f'{name}_states.npy', self.states)
+        np.save(path + f'{name}_actions.npy', self.actions)
+        np.save(path + f'{name}_scans.npy', self.scans)
+ 
+ 
 class DriveNode(Node):
     def __init__(self, node_name):
         super().__init__(node_name)
@@ -44,12 +78,12 @@ class DriveNode(Node):
         self.running = False
 
         self.lap_count = 0 
-        self.n_laps = None
         self.lap_times = []
 
         self.logger = None
         d = "/home/benjy/sim_ws/src/f1tenth_racing/"
         self.params = load_params(d + "config/params.yaml")
+        self.n_laps = self.params.n_laps
 
         simulation_time = 0.1
         self.drive_publisher = self.create_publisher(AckermannDriveStamped, '/drive', 10)
@@ -62,6 +96,8 @@ class DriveNode(Node):
         self.ego_reset_pub = self.create_publisher(
             PoseWithCovarianceStamped,
             '/initialpose', 10)
+
+        self.experiment_history = ExperimentHistory()
 
     def current_drive_callback(self, msg):
         self.steering_angle = msg.steering_angle
@@ -86,8 +122,9 @@ class DriveNode(Node):
 
         self.lap_count += 1
 
-        if self.lap_count == self.n_laps:
+        if self.lap_count >= self.n_laps:
             self.running = False
+            self.get_logger().info(f"Laps are completed: {self.lap_count} complete -> Running Set to: {self.running}")
             self.save_data_callback()
             self.ego_reset()
             self.destroy_node()
@@ -106,10 +143,13 @@ class DriveNode(Node):
 
         if self.check_lap_done(self.position):
             self.lap_done()
+            return
         
         observation = self.build_observation()
 
         action = self.calculate_action(observation)
+
+        self.experiment_history.add_data(self.position, action, self.scan)
 
         self.send_drive_message(action)
 
@@ -154,32 +194,39 @@ class DriveNode(Node):
 
         return observation
 
+    # def check_lap_done(self, position):
+    #     start_x = 0
+    #     start_y = 0 
+    #     start_theta = 0
+    #     start_rot = np.array([[np.cos(-start_theta), -np.sin(-start_theta)], [np.sin(-start_theta), np.cos(-start_theta)]])
+
+    #     poses_x = np.array(position[0])-start_x
+    #     poses_y = np.array(position[1])-start_y
+    #     delta_pt = np.dot(start_rot, np.stack((poses_x, poses_y), axis=0))
+
+    #     dist2 = delta_pt[0]**2 + delta_pt[1]**2
+    #     closes = dist2 <= 1
+    #     if closes and not self.near_start:
+    #         self.near_start = True
+    #         self.toggle_list += 1
+    #         self.get_logger().info(f"Near start true: {position}")
+    #     elif not closes and self.near_start:
+    #         self.near_start = False
+    #         self.toggle_list += 1
+    #         self.get_logger().info(f"Near start false: {position}")
+    #         # print(self.toggle_list)
+    #     self.lap_counts = self.toggle_list // 2
+        
+    #     done = self.toggle_list >= 2
+        
+    #     return done
+    
     def check_lap_done(self, position):
-        start_x = 0
-        start_y = 0 
-        start_theta = 0
-        start_rot = np.array([[np.cos(-start_theta), -np.sin(-start_theta)], [np.sin(-start_theta), np.cos(-start_theta)]])
-
-        poses_x = np.array(position[0])-start_x
-        poses_y = np.array(position[1])-start_y
-        delta_pt = np.dot(start_rot, np.stack((poses_x, poses_y), axis=0))
-
-        dist2 = delta_pt[0]**2 + delta_pt[1]**2
-        closes = dist2 <= 1
-        if closes and not self.near_start:
-            self.near_start = True
-            self.toggle_list += 1
-            self.get_logger().info(f"Near start true: {position}")
-        elif not closes and self.near_start:
-            self.near_start = False
-            self.toggle_list += 1
-            self.get_logger().info(f"Near start false: {position}")
-            # print(self.toggle_list)
-        self.lap_counts = self.toggle_list // 2
-        
-        done = self.toggle_list >= 2
-        
-        return done
+        """
+            Check if the car has completed a lap
+        """
+        if position[1] < -17:
+            return True
 
     def ego_reset(self):
         msg = PoseWithCovarianceStamped() 
@@ -194,7 +241,7 @@ class DriveNode(Node):
 
         self.ego_reset_pub.publish(msg)
 
-        self.get_logger().info("Finished Resetting: angle 180")
+        self.get_logger().info("Finished Resetting Vehicle")
 
     def run_lap(self):
         time.sleep(0.1)
