@@ -6,3 +6,5 @@
 *.nbc
 
 # Data/PreTrained/*
+f1tenth_racing.egg-info
+PLOTS/*
