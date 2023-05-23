@@ -4,6 +4,7 @@ import yaml
 from numba import njit
 import numpy as np
 from copy import copy
+import datetime
 
 from f1tenth_racing.DriveNode import DriveNode
 from matplotlib import pyplot as plt
@@ -13,7 +14,6 @@ from f1tenth_racing.TrackLine import TrackLine
 MAX_SPEED = 8
 MAX_STEER = 0.4
 WHEELBASE = 0.33
-import datetime
       
 
 class PurePursuitNode(DriveNode):
@@ -22,11 +22,10 @@ class PurePursuitNode(DriveNode):
         
         self.agent_name = "PurePursuit"
         map_name = self.params.map_name
-        self.trajectory = TrackLine(map_name, True)
-
         self.directory = self.params.directory
         self.speed_limit = self.params.speed_limit
         self.lookahead = self.params.lookahead
+        self.trajectory = TrackLine(map_name, True, directory=self.directory)
 
     def calculate_action(self, observation):
         """

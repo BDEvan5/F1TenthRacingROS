@@ -16,25 +16,23 @@ from argparse import Namespace
 import os
 import datetime
 import csv
+import yaml
 
-        
-def load_params(filename):
-    import yaml
-    with open(filename) as file:
-        params = yaml.load(file, Loader=yaml.FullLoader)
-    params = Namespace(**params)
-    return params
+
 
 
 def ensure_path_exists(path):
     if not os.path.exists(path):
         os.mkdir(path)
 
+
 class ExperimentHistory:
-    def __init__(self):
+    def __init__(self, results_directory):
         self.states = []
         self.actions = []
         self.scans = []
+        self.results_directory = results_directory
+        ensure_path_exists(self.results_directory)
 
     def add_data(self, state, action, scan):
         self.states.append(state)
@@ -42,8 +40,7 @@ class ExperimentHistory:
         self.scans.append(scan)
 
     def save_experiment(self, name):  
-        # path = f"Data/ResultsROS/{name}/"
-        path = f"Data/ResultsJetson/{name}/"
+        path = self.results_directory + name + "/"
         ensure_path_exists(path)
         for i in range(100):
             run_path  = f"Run_{i}/"
@@ -51,7 +48,7 @@ class ExperimentHistory:
             os.mkdir(path + run_path)
             break
 
-        path += run_path
+        path = path + run_path
         name = f"Run_{i}"
 
         self.scans = np.array(self.scans)
@@ -66,6 +63,20 @@ class ExperimentHistory:
             csvwriter.writerows(self.actions)
 
         return path 
+
+        
+def load_params_robust():
+    try:
+        d = "/home/benjy/sim_ws/src/f1tenth_racing/"
+        with open(d + "config/params.yaml") as file:
+            params = yaml.load(file, Loader=yaml.FullLoader)
+    except:
+        d = "/home/jetson/f1tenth_ws/src/f1tenth_racing/"
+        with open(d + "config/params.yaml") as file:
+            params = yaml.load(file, Loader=yaml.FullLoader)
+
+    params = Namespace(**params)
+    return params
 
 
 class DriveNode(Node):
@@ -89,17 +100,14 @@ class DriveNode(Node):
         self.lap_count = 0 
         self.lap_times = []
 
-        self.logger = None
-        d = "/home/jetson/f1tenth_ws/src/f1tenth_racing/"
-        # d = "/home/benjy/sim_ws/src/f1tenth_racing/"
-        self.params = load_params(d + "config/params.yaml")
+        self.params = load_params_robust()
         self.n_laps = self.params.n_laps
 
         simulation_time = 0.1
         self.drive_publisher = self.create_publisher(AckermannDriveStamped, '/drive', 10)
         self.cmd_timer = self.create_timer(simulation_time, self.drive_callback)
 
-        self.odom_subscriber = self.create_subscription(Odometry, 'pf/pose/odom', self.odom_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, self.params.odom_topic, self.odom_callback, 10)
         self.scan_sub = self.create_subscription(LaserScan, 'scan', self.scan_callback, 10)
         self.current_drive_sub = self.create_subscription(AckermannDrive, 'ego_racecar/current_drive', self.current_drive_callback, 10)
 
@@ -107,7 +115,7 @@ class DriveNode(Node):
             PoseWithCovarianceStamped,
             '/initialpose', 10)
 
-        self.experiment_history = ExperimentHistory()
+        self.experiment_history = ExperimentHistory(self.params.results_directory )
 
     def current_drive_callback(self, msg):
         self.steering_angle = msg.steering_angle
@@ -120,6 +128,8 @@ class DriveNode(Node):
         x, y, z = quaternion_to_euler_angle(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z)
         theta = z * np.pi / 180
         self.theta = copy(theta)
+
+        # self.get_logger().info(f"Position: {self.position} Theta: {self.theta} Velocity: {self.velocity}")
 
     def scan_callback(self, msg):
         self.scan = np.array(msg.ranges)
@@ -138,8 +148,6 @@ class DriveNode(Node):
             self.save_data_callback()
             self.ego_reset()
             self.destroy_node()
-
-        if self.logger: self.logger.reset_logging()
 
         self.current_lap_time = 0.0
         self.num_toggles = 0
@@ -236,7 +244,7 @@ class DriveNode(Node):
         """
             Check if the car has completed a lap
         """
-        if position[1] < -17:
+        if position[1] < -16.5:
             return True
 
     def ego_reset(self):

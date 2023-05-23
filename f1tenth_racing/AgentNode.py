@@ -66,7 +66,7 @@ def extract_waypoints(obs, track, n_waypoints):
 
 
 class EndArchitecture:
-    def __init__(self, map_name):
+    def __init__(self, map_name, directory):
         self.action_space = 2
         self.state_space = NUM_BEAMS *2 + 1 
 
@@ -90,12 +90,12 @@ class EndArchitecture:
 
 
 class PlanningArchitecture:
-    def __init__(self, map_name):
+    def __init__(self, map_name, directory):
         self.waypoint_scale = 2.5
         self.state_space = N_WAYPOINTS_10 * 2 + 3 + NUM_BEAMS
         self.action_space = 2
 
-        self.track = TrackLine(map_name, False)
+        self.track = TrackLine(map_name, False, directory=directory)
     
     def process_observation(self, obs):
         relative_pts, _speeds = extract_waypoints(obs, self.track, N_WAYPOINTS_10)
@@ -106,12 +106,12 @@ class PlanningArchitecture:
         return state
 
 class TrajectoryArchitecture:
-    def __init__(self, map_name):
+    def __init__(self, map_name, directory):
         self.state_space = N_WAYPOINTS_20 * 3 + 3
         self.waypoint_scale = 2.5
 
         self.action_space = 2
-        self.track = TrackLine(map_name, True)
+        self.track = TrackLine(map_name, True, directory=directory)
     
     def process_observation(self, obs):
         motion_variables = extract_motion_variables(obs)
@@ -171,7 +171,7 @@ class AgentNode(DriveNode):
         self.directory = self.params.directory
         self.agent = TestSAC(agent_name, self.directory + f"Data/PreTrained/{agent_name}/")
         architecture = agent_name.split("_")[2]
-        self.architecture = architecture_dict[architecture](map_name)
+        self.architecture = architecture_dict[architecture](map_name, self.directory)
 
         self.speed_limit = self.params.speed_limit
 

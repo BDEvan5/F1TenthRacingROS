@@ -4,13 +4,17 @@ import  matplotlib.pyplot as plt
 from numba import njit
 
 class TrackLine:
-    def __init__(self, map_name, racing_line=False, expand=False) -> None:
+    def __init__(self, map_name, racing_line=False, directory=None) -> None:
         self.wpts = None
         self.ss = None
         self.map_name = map_name
         self.total_s = None
         self.vs = None
-        self.directory = f'/home/jetson/f1tenth_ws/src/f1tenth_racing/'
+        if directory is None:
+            self.directory = f'/home/jetson/f1tenth_ws/src/f1tenth_racing/'
+        else:
+            self.directory = directory
+        print(f"Directory: {self.directory}")
         
         if racing_line:
             self.load_raceline()
@@ -25,7 +29,6 @@ class TrackLine:
 
         self.max_distance = 0
         self.distance_allowance = 1
-
 
     def load_centerline(self):
         filename = self.directory + 'maps/' + self.map_name + '_centerline.csv'
