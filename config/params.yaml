@@ -13,6 +13,4 @@ agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_1_0"
 
 # agent_name: "AgentOff_SAC_Game_mco_TAL_8_1_0"
 
-# architecture: "pure_pursuit"
-# agent_name: "PurePursuit"
 lookahead: 1.4

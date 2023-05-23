@@ -20,10 +20,7 @@ class PurePursuitNode(DriveNode):
     def __init__(self):
         super().__init__('pp_node')
         
-        architecture = self.params.architecture
-        assert architecture == "pure_pursuit", f"Incorrect architecture {architecture}"
-
-        self.agent_name = self.params.agent_name
+        self.agent_name = "PurePursuit"
         map_name = self.params.map_name
         self.trajectory = TrackLine(map_name, True)
 
