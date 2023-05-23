@@ -14,8 +14,8 @@ odom_topic: "pf/pose/odom"
 # results_directory: "Data/ResultsTesting/"
 # odom_topic: "ego_racecar/odom"
 
-#agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_1_0"
+agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_1_0"
 #agent_name: "AgentOff_SAC_TrajectoryFollower_mco_TAL_8_1_0"
-agent_name: "AgentOff_SAC_Game_mco_TAL_8_1_0"
+#agent_name: "AgentOff_SAC_Game_mco_TAL_8_1_0"
 
 lookahead: 2.6
