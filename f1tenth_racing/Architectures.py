@@ -18,7 +18,10 @@ class EndArchitecture:
     def __init__(self, map_name):
         self.action_space = 2
         n_beams = 20
-        self.state_space = n_beams + 1 
+        self.state_space = n_beams *2 + 1 
+
+        self.n_scans = 2
+        self.scan_buffer = np.zeros((self.n_scans, n_beams))
 
     def process_observation(self, obs):
         """
@@ -38,6 +41,18 @@ class EndArchitecture:
         # scan = scan[::-1]
         speed = obs['state'][3] / MAX_SPEED
         scan = np.clip(scan/RANGE_FINDER_SCALE, 0, 1)
+
+        if self.scan_buffer.all() ==0: # first reading
+            for i in range(self.n_scans):
+                self.scan_buffer[i, :] = scan 
+        else:
+            self.scan_buffer = np.roll(self.scan_buffer, 1, axis=0)
+            self.scan_buffer[0, :] = scan
+
+        dual_scan = np.reshape(self.scan_buffer, (self.n_beams * self.n_scans))
+
+        nn_obs = np.concatenate((dual_scan, [speed]))
+
         nn_obs = np.concatenate((scan, [speed]))
 
         return nn_obs

@@ -10,6 +10,7 @@ import time
 import math
 import torch     
 import yaml
+import datetime
 
 import numpy as np
 from copy import copy
@@ -39,9 +40,9 @@ def extract_scan(obs):
 def extract_motion_variables(obs):
     speed = obs['state'][3] / MAX_SPEED
     # anglular_vel = obs['ang_vels_z'][0] / np.pi
-    anglular_vel = 0 #! problem...
+    # anglular_vel = 0 #! problem...
     steering_angle = obs['state'][4] / MAX_STEER
-    motion_variables = np.array([speed, anglular_vel, steering_angle])
+    motion_variables = np.array([speed, steering_angle])
         
     return motion_variables
 
@@ -67,13 +68,23 @@ def extract_waypoints(obs, track, n_waypoints):
 class EndArchitecture:
     def __init__(self, map_name):
         self.action_space = 2
-        n_beams = 20
-        self.state_space = n_beams + 1 
+        self.state_space = NUM_BEAMS *2 + 1 
+
+        self.n_scans = 2
+        self.scan_buffer = np.zeros((self.n_scans, NUM_BEAMS))
 
     def process_observation(self, obs):
         scan = extract_scan(obs)
+        if self.scan_buffer.all() ==0: # first reading
+            for i in range(self.n_scans):
+                self.scan_buffer[i, :] = scan 
+        else:
+            self.scan_buffer = np.roll(self.scan_buffer, 1, axis=0)
+            self.scan_buffer[0, :] = scan
+        dual_scan = np.reshape(self.scan_buffer, (NUM_BEAMS * self.n_scans))
+
         speed = obs['state'][3] / MAX_SPEED
-        nn_obs = np.concatenate((scan, [speed]))
+        nn_obs = np.concatenate((dual_scan, [speed]))
 
         return nn_obs
 
@@ -104,7 +115,7 @@ class TrajectoryArchitecture:
     
     def process_observation(self, obs):
         motion_variables = extract_motion_variables(obs)
-        relative_pts, scaled_speeds = extract_waypoints(obs, self.track, N_WAYPOINTS_20)
+        relative_pts, scaled_speeds = extract_waypoints(obs, self.track, N_WAYPOINTS_10)
 
         relative_pts = np.concatenate((relative_pts, scaled_speeds[:, None]), axis=-1)
         relative_pts = relative_pts.flatten()
@@ -131,9 +142,12 @@ def transform_waypoints(wpts, pose):
 
 
 
-architecture_dict = {"planning": PlanningArchitecture,
-                     "trajectory": TrajectoryArchitecture,
+architecture_dict = {"Game": PlanningArchitecture,
+                     "TrajectoryFollower": TrajectoryArchitecture,
                      "endToEnd": EndArchitecture}
+# architecture_dict = {"planning": PlanningArchitecture,
+#                      "trajectory": TrajectoryArchitecture,
+#                      "endToEnd": EndArchitecture}
 
 
 class TestSAC:
@@ -145,7 +159,6 @@ class TestSAC:
         action, log_prob = self.actor(state)
         
         return action.detach().numpy()
-import datetime
       
 
 class AgentNode(DriveNode):
@@ -154,10 +167,10 @@ class AgentNode(DriveNode):
         
         agent_name = self.params.agent_name
         map_name = self.params.map_name
-        architecture = self.params.architecture
 
         self.directory = self.params.directory
         self.agent = TestSAC(agent_name, self.directory + f"Data/PreTrained/{agent_name}/")
+        architecture = agent_name.split("_")[2]
         self.architecture = architecture_dict[architecture](map_name)
 
         self.speed_limit = self.params.speed_limit

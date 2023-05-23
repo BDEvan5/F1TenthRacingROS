@@ -6,3 +6,4 @@
 *.nbc
 
 # Data/PreTrained/*
+Data/ResultsROS/*
