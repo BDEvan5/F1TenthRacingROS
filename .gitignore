@@ -6,6 +6,9 @@
 *.nbc
 
 # Data/PreTrained/*
+<<<<<<< HEAD
 Data/ResultsROS/*
+=======
+>>>>>>> master
 f1tenth_racing.egg-info
 PLOTS/*
