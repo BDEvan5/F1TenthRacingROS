@@ -99,7 +99,7 @@ class DriveNode(Node):
         self.drive_publisher = self.create_publisher(AckermannDriveStamped, '/drive', 10)
         self.cmd_timer = self.create_timer(simulation_time, self.drive_callback)
 
-        self.odom_subscriber = self.create_subscription(Odometry, 'ego_racecar/odom', self.odom_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, 'pf/pose/odom', self.odom_callback, 10)
         self.scan_sub = self.create_subscription(LaserScan, 'scan', self.scan_callback, 10)
         self.current_drive_sub = self.create_subscription(AckermannDrive, 'ego_racecar/current_drive', self.current_drive_callback, 10)
 

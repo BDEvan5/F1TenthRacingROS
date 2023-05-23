@@ -10,7 +10,7 @@ class TrackLine:
         self.map_name = map_name
         self.total_s = None
         self.vs = None
-        self.directory = f'/home/benjy/sim_ws/src/f1tenth_racing/'
+        self.directory = f'/home/jetson/f1tenth_ws/src/f1tenth_racing/'
         
         if racing_line:
             self.load_raceline()
