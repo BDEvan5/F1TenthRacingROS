@@ -118,7 +118,9 @@ class DriveNode(Node):
         self.experiment_history = ExperimentHistory(self.params.results_directory )
 
     def current_drive_callback(self, msg):
-        self.steering_angle = msg.steering_angle
+        # self.steering_angle = 0
+        pass
+        # self.steering_angle = msg.steering_angle
 
     def odom_callback(self, msg):
         position = msg.pose.pose.position
@@ -166,6 +168,7 @@ class DriveNode(Node):
         observation = self.build_observation()
 
         action = self.calculate_action(observation)
+        self.steering_angle = action[0]
 
         state = observation['state']
         self.experiment_history.add_data(state, action, self.scan)
