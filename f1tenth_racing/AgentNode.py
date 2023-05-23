@@ -39,8 +39,7 @@ def extract_scan(obs):
 
 def extract_motion_variables(obs):
     speed = obs['state'][3] / MAX_SPEED
-    # anglular_vel = obs['ang_vels_z'][0] / np.pi
-    # anglular_vel = 0 #! problem...
+    # steering_angle = 0 #! problem...
     steering_angle = obs['state'][4] / MAX_STEER
     motion_variables = np.array([speed, steering_angle])
         
