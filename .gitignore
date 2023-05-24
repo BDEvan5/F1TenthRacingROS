@@ -10,3 +10,5 @@ Data/ResultsROS/*
 Data/ResultsTesting/*
 f1tenth_racing.egg-info
 PLOTS/*
+
+*.csv#
