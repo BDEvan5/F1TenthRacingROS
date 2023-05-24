@@ -168,7 +168,7 @@ class DriveNode(Node):
         observation = self.build_observation()
 
         action = self.calculate_action(observation)
-        self.steering_angle = action[0]
+        self.steering_angle = 0.5 * self.steering_angle + 0.5* action[0]
 
         state = observation['state']
         self.experiment_history.add_data(state, action, self.scan)
