@@ -3,7 +3,7 @@
 
 map_name: "CornerHallE"
 n_laps: 1
-speed_limit: 3.5
+speed_limit: 4.0
 
 directory: "/home/jetson/f1tenth_ws/src/f1tenth_racing/"
 results_directory: "Data/ResultsJetson24_2/"
