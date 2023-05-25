@@ -5,5 +5,5 @@ map_name: CornerHallE
 n_laps: 1
 odom_topic: pf/pose/odom
 results_directory: Data/ResultsJetson25/
-speed_limit: 2.0
-time: '5_25_10_36'
+speed_limit: 1.5
+time: '5_25_14_34'
