@@ -39,7 +39,7 @@ class ExperimentHistory:
         self.actions.append(action)
         self.scans.append(scan)
 
-    def save_experiment(self, name):  
+    def save_experiment(self, name, i=0):  
         path = self.results_directory + name + "/"
         ensure_path_exists(path)
         for i in range(100):
@@ -52,15 +52,20 @@ class ExperimentHistory:
         name = f"Run_{i}"
 
         self.scans = np.array(self.scans)
-        np.save(path + f"{name}_scans", self.scans)
-        with open(path + f'{name}_states.csv', 'w') as f:
+        np.save(path + f"{name}_scans_{i}", self.scans)
+        with open(path + f'{name}_states_{i}.csv', 'w') as f:
             csvwriter = csv.writer(f) 
             csvwriter.writerow(['X', "Y", "Theta", "Speed", "Steering"]) 
             csvwriter.writerows(self.states)
-        with open(path + f'{name}_actions.csv', 'w') as f:
+        with open(path + f'{name}_actions_{i}.csv', 'w') as f:
             csvwriter = csv.writer(f) 
             csvwriter.writerow(['Steering', "Speed"]) 
             csvwriter.writerows(self.actions)
+
+
+        self.states = []
+        self.actions = []
+        self.scans = []
 
         return path 
 
@@ -161,7 +166,7 @@ class DriveNode(Node):
         if not self.running:
             return
 
-        if self.check_lap_done(self.position):
+        if self.check_lap_done_full_map(self.position):
             self.lap_done()
             return
         
@@ -216,39 +221,41 @@ class DriveNode(Node):
 
         return observation
 
-    # def check_lap_done(self, position):
-    #     start_x = 0
-    #     start_y = 0 
-    #     start_theta = 0
-    #     start_rot = np.array([[np.cos(-start_theta), -np.sin(-start_theta)], [np.sin(-start_theta), np.cos(-start_theta)]])
+    def check_lap_done_full_map(self, position):
+        start_x = 0
+        start_y = 0 
+        start_theta = 0
+        start_rot = np.array([[np.cos(-start_theta), -np.sin(-start_theta)], [np.sin(-start_theta), np.cos(-start_theta)]])
 
-    #     poses_x = np.array(position[0])-start_x
-    #     poses_y = np.array(position[1])-start_y
-    #     delta_pt = np.dot(start_rot, np.stack((poses_x, poses_y), axis=0))
+        poses_x = np.array(position[0])-start_x
+        poses_y = np.array(position[1])-start_y
+        delta_pt = np.dot(start_rot, np.stack((poses_x, poses_y), axis=0))
 
-    #     dist2 = delta_pt[0]**2 + delta_pt[1]**2
-    #     closes = dist2 <= 1
-    #     if closes and not self.near_start:
-    #         self.near_start = True
-    #         self.toggle_list += 1
-    #         self.get_logger().info(f"Near start true: {position}")
-    #     elif not closes and self.near_start:
-    #         self.near_start = False
-    #         self.toggle_list += 1
-    #         self.get_logger().info(f"Near start false: {position}")
-    #         # print(self.toggle_list)
-    #     self.lap_counts = self.toggle_list // 2
+        dist2 = delta_pt[0]**2 + delta_pt[1]**2
+        closes = dist2 <= 1
+        self.get_logger().info(f"checking done...: {position}")
+
+        if closes and not self.near_start:
+            self.near_start = True
+            self.toggle_list += 1
+            self.get_logger().info(f"Near start true: {position}")
+        elif not closes and self.near_start:
+            self.near_start = False
+            self.toggle_list += 1
+            self.get_logger().info(f"Near start false: {position}")
+            # print(self.toggle_list)
+        self.lap_counts = self.toggle_list // 2
         
-    #     done = self.toggle_list >= 2
+        done = self.toggle_list >= 2
         
-    #     return done
+        return done
     
-    def check_lap_done(self, position):
-        """
-            Check if the car has completed a lap
-        """
-        if position[1] < -16.5:
-            return True
+    # def check_lap_done(self, position):
+    #     """
+    #         Check if the car has completed a lap
+    #     """
+    #     if position[1] < -16.5:
+    #         return True
 
     def ego_reset(self):
         msg = PoseWithCovarianceStamped() 

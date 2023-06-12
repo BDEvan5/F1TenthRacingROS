@@ -20,7 +20,7 @@ class PurePursuitNode(DriveNode):
     def __init__(self):
         super().__init__('pp_node')
         
-        self.agent_name = "PurePursuit"
+        self.agent_name = "PurePursuit_FoxGlove"
         map_name = self.params.map_name
         self.directory = self.params.directory
         self.speed_limit = self.params.speed_limit
