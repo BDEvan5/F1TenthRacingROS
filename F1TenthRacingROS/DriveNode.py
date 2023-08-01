@@ -72,11 +72,11 @@ class ExperimentHistory:
         
 def load_params_robust():
     try:
-        d = "/home/benjy/sim_ws/src/f1tenth_racing/"
+        d = "/home/benjy/sim_ws/src/F1TenthRacingROS/"
         with open(d + "config/params.yaml") as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
     except:
-        d = "/home/jetson/f1tenth_ws/src/f1tenth_racing/"
+        d = "/home/jetson/f1tenth_ws/src/F1TenthRacingROS/"
         with open(d + "config/params.yaml") as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -109,7 +109,7 @@ class DriveNode(Node):
         self.n_laps = self.params.n_laps
 
         simulation_time = 0.1
-        self.drive_publisher = self.create_publisher(AckermannDriveStamped, '/drive', 10)
+        self.drive_publisher = self.create_publisher(AckermannDriveStamped, '/drive', 10, )
         self.cmd_timer = self.create_timer(simulation_time, self.drive_callback)
 
         self.odom_subscriber = self.create_subscription(Odometry, self.params.odom_topic, self.odom_callback, 10)
@@ -120,7 +120,11 @@ class DriveNode(Node):
             PoseWithCovarianceStamped,
             '/initialpose', 10)
 
-        self.experiment_history = ExperimentHistory(self.params.results_directory )
+        self.experiment_history = ExperimentHistory(self.params.results_directory)
+
+        # self.delay_steps = self.params.delay_steps
+        self.position_buffer = np.zeros((self.params.delay_steps+1, 4))
+        # self.current_position_time = time.time()
 
     def current_drive_callback(self, msg):
         # self.steering_angle = 0
@@ -128,13 +132,30 @@ class DriveNode(Node):
         # self.steering_angle = msg.steering_angle
 
     def odom_callback(self, msg):
-        position = msg.pose.pose.position
-        self.position = np.array([position.x, position.y])
-        self.velocity = msg.twist.twist.linear.x
-
+        pos_x, pos_y = msg.pose.pose.position.x, msg.pose.pose.position.y
+        speed = msg.twist.twist.linear.x
         x, y, z = quaternion_to_euler_angle(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z)
         theta = z * np.pi / 180
-        self.theta = copy(theta)
+
+        odom = np.array([pos_x, pos_y, theta, speed])
+        self.position_buffer = np.roll(self.position_buffer, -1, axis=0)
+        self.position_buffer[-1] = odom
+        current_odom = self.position_buffer[0]
+
+        self.position = current_odom[:2]
+        self.theta = current_odom[2]
+        self.velocity = current_odom[3]
+
+
+
+    # def odom_callback(self, msg):
+    #     position = msg.pose.pose.position
+    #     self.position = np.array([position.x, position.y])
+    #     self.velocity = msg.twist.twist.linear.x
+
+    #     x, y, z = quaternion_to_euler_angle(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z)
+    #     theta = z * np.pi / 180
+    #     self.theta = copy(theta)
 
         # self.get_logger().info(f"Position: {self.position} Theta: {self.theta} Velocity: {self.velocity}")
 
@@ -166,7 +187,8 @@ class DriveNode(Node):
         if not self.running:
             return
 
-        if self.check_lap_done_full_map(self.position):
+        if self.check_lap_done(self.position):
+        # if self.check_lap_done_full_map(self.position):
             self.lap_done()
             return
         
@@ -197,6 +219,12 @@ class DriveNode(Node):
     def lap_complete_callback(self):
         pass
 
+    # def send_drive_message(self, action):
+    #     drive_msg = AckermannDrive()
+    #     drive_msg.speed = float(action[1])
+    #     drive_msg.steering_angle = float(action[0])
+    #     self.drive_publisher.publish(drive_msg)
+    
     def send_drive_message(self, action):
         drive_msg = AckermannDriveStamped()
         drive_msg.drive.speed = float(action[1])
@@ -250,12 +278,12 @@ class DriveNode(Node):
         
         return done
     
-    # def check_lap_done(self, position):
-    #     """
-    #         Check if the car has completed a lap
-    #     """
-    #     if position[1] < -16.5:
-    #         return True
+    def check_lap_done(self, position):
+        """
+            Check if the car has completed a lap
+        """
+        if position[1] < -16.5:
+            return True
 
     def ego_reset(self):
         msg = PoseWithCovarianceStamped() 

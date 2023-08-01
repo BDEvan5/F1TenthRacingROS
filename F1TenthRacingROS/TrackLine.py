@@ -11,7 +11,7 @@ class TrackLine:
         self.total_s = None
         self.vs = None
         if directory is None:
-            self.directory = f'/home/jetson/f1tenth_ws/src/f1tenth_racing/'
+            self.directory = f'/home/jetson/f1tenth_ws/src/F1TenthRacingROS/'
         else:
             self.directory = directory
         print(f"Directory: {self.directory}")

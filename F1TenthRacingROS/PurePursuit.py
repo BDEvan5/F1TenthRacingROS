@@ -6,9 +6,9 @@ import numpy as np
 from copy import copy
 import datetime
 
-from f1tenth_racing.DriveNode import DriveNode
+from F1TenthRacingROS.DriveNode import DriveNode
 from matplotlib import pyplot as plt
-from f1tenth_racing.TrackLine import TrackLine
+from F1TenthRacingROS.TrackLine import TrackLine
 
 
 MAX_SPEED = 8
@@ -20,12 +20,15 @@ class PurePursuitNode(DriveNode):
     def __init__(self):
         super().__init__('pp_node')
         
-        self.agent_name = "PurePursuit_FoxGlove"
+        self.agent_name = "PurePursuit"
         map_name = self.params.map_name
         self.directory = self.params.directory
         self.speed_limit = self.params.speed_limit
         self.lookahead = self.params.lookahead
         self.trajectory = TrackLine(map_name, True, directory=self.directory)
+
+        self.ego_reset()
+
 
     def calculate_action(self, observation):
         """

@@ -2,7 +2,7 @@ from setuptools import setup
 from glob import glob
 import os
 
-package_name = 'f1tenth_racing'
+package_name = 'F1TenthRacingROS'
 
 setup(
     name=package_name,
@@ -14,7 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*.py')),
         (os.path.join('share', package_name), glob('maps/*.csv')),
-        # (os.path.join('share', package_name), glob('f1tenth_racing/Utils/*.csv')),
+        # (os.path.join('share', package_name), glob('F1TenthRacingROS/Utils/*.csv')),
         # (os.path.join('share', package_name), glob('maps/*.csv')),
     ],
     install_requires=['setuptools'],
@@ -26,9 +26,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'pure_pursuit=f1tenth_racing.PurePursuitNode:main',
-            'nn_agent=f1tenth_racing.AgentNode:main',
-            'pp_agent=f1tenth_racing.PurePursuit:main',
+            'pure_pursuit=F1TenthRacingROS.PurePursuitNode:main',
+            'nn_agent=F1TenthRacingROS.AgentNode:main',
+            'pp_agent=F1TenthRacingROS.PurePursuit:main',
         ],
     },
 )

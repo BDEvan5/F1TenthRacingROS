@@ -12,13 +12,13 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     config = os.path.join(
-        "/home/benjy/sim_ws/src/f1tenth_racing/",
+        "/home/benjy/sim_ws/src/F1TenthRacingROS/",
         'config',
         'testing_params.yaml'
     )
 
     testing_node = Node(
-        package='f1tenth_racing',
+        package='F1TenthRacingROS',
         executable='pure_pursuit',
         name='pure_pursuit',
         parameters=[config]

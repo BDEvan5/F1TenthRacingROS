@@ -15,9 +15,9 @@ import datetime
 import numpy as np
 from copy import copy
 
-from f1tenth_racing.DriveNode import DriveNode
+from F1TenthRacingROS.DriveNode import DriveNode
 from matplotlib import pyplot as plt
-from f1tenth_racing.TrackLine import TrackLine
+from F1TenthRacingROS.TrackLine import TrackLine
 
 
 NUM_BEAMS = 20

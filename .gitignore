@@ -8,7 +8,7 @@
 # Data/PreTrained/*
 Data/ResultsROS/*
 Data/ResultsTesting/*
-f1tenth_racing.egg-info
+F1TenthRacingROS.egg-info
 PLOTS/*
 
 *.csv#
