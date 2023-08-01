@@ -123,6 +123,7 @@ class DriveNode(Node):
         self.experiment_history = ExperimentHistory(self.params.results_directory)
 
         # self.delay_steps = self.params.delay_steps
+        self.action_buffer = np.zeros((self.params.action_delay+1, 2))
         self.position_buffer = np.zeros((self.params.delay_steps+1, 4))
         # self.current_position_time = time.time()
 
@@ -195,12 +196,17 @@ class DriveNode(Node):
         observation = self.build_observation()
 
         action = self.calculate_action(observation)
-        self.steering_angle = 0.5 * self.steering_angle + 0.5* action[0]
+        self.steering_angle = 0.5 * self.steering_angle + 0.5* self.action_buffer[0, 0]
+        # self.steering_angle = 0.5 * self.steering_angle + 0.5* action[0]
 
         state = observation['state']
         self.experiment_history.add_data(state, action, self.scan)
 
-        self.send_drive_message(action)
+        self.action_buffer = np.roll(self.action_buffer, -1, axis=0)
+        self.action_buffer[-1] = action
+        publish_action = self.action_buffer[0]
+
+        self.send_drive_message(publish_action)
 
     @abstractmethod
     def calculate_action(self, observation):
