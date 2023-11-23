@@ -222,6 +222,9 @@ class DriveNode(Node):
             return
         
         observation = self.build_observation()
+        if np.all(observation['scan'] == 0):
+            self.send_drive_message(np.zeros(2))
+            return
 
         action = self.calculate_action(observation)
         # self.steering_angle = 0.5 * self.steering_angle + 0.5* self.action_buffer[0, 0]

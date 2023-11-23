@@ -28,7 +28,6 @@ class LocalPlanningNode(DriveNode):
         self.agent_name = "LocalPlanning"
         self.directory = self.params.directory
         self.speed_limit = self.params.speed_limit
-        self.lookahead = self.params.lookahead
 
         self.local_map_generator = LocalMapGenerator()
         self.local_track = None
@@ -61,12 +60,12 @@ class LocalPlanningNode(DriveNode):
             return np.zeros(2)
         self.local_track = self.local_map_generator.generate_line_local_map(scan)
         if len(self.local_track) < 4:
-            return np.array([0, 6])
+            return np.array([0, 8])
             # return np.zeros(2)
         if len(self.local_track) > 25:
             self.local_track = self.local_track[:25]
         
-        print(f"Local track length: {len(self.local_track)}")
+        # print(f"Local track length: {len(self.local_track)}")
         self.publish_local_track()
 
         self.generate_minimum_curvature_path()
