@@ -4,7 +4,7 @@
 map_name: "CornerHallE"
 # map_name: "aut"
 n_laps: 1
-speed_limit: 1.5
+speed_limit: 8
 
 # directory: "/home/jetson/f1tenth_ws/src/F1TenthRacingROS/"
 # results_directory: "Data/ResultsJetson25/"
@@ -12,25 +12,27 @@ speed_limit: 1.5
 
 
 directory: "/home/benjy/sim_ws/src/F1TenthRacingROS/"
-results_directory: "Data/SimAug_1_5/"
+results_directory: "Data/SimNov23_1/"
 odom_topic: "ego_racecar/odom"
 
 
-# agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_1_0"
+agent_name: "AgentOff_SAC_endToEnd_mco_TAL_8_1_0"
 # agent_name: "AgentOff_SAC_TrajectoryFollower_mco_TAL_8_1_0"
-agent_name: "AgentOff_SAC_Game_mco_TAL_8_1_0"
-
+# agent_name: "AgentOff_SAC_Game_mco_TAL_8_1_0"
+# 
 lookahead: 2.2
-# delay_steps: 00
+delay_steps: 00
 # delay_steps: 10
-delay_steps: 20
+# delay_steps: 20
 # delay_steps: 30
 # delay_steps: 40
 # delay_steps: 50
 # delay_steps: 60
 # delay_steps: 70
 # delay_steps: 80
+# delay_steps: 100
+# delay_steps: 5000
 
-action_delay: 2
+action_delay: 0
 
 

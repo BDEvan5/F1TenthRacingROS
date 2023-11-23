@@ -8,6 +8,8 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 import time
 import math
 
+from geometry_msgs.msg import TransformStamped
+import tf2_ros
 
 import numpy as np
 from copy import copy
@@ -17,8 +19,6 @@ import os
 import datetime
 import csv
 import yaml
-
-
 
 
 def ensure_path_exists(path):
@@ -109,7 +109,13 @@ class DriveNode(Node):
         self.n_laps = self.params.n_laps
 
         simulation_time = 0.1
-        self.drive_publisher = self.create_publisher(AckermannDriveStamped, '/drive', 10, )
+        
+        qos_policy = rclpy.qos.QoSProfile(
+            reliability=rclpy.qos.ReliabilityPolicy.RELIABLE, 
+            durability=rclpy.qos.DurabilityPolicy.TRANSIENT_LOCAL,
+            # reliability=rclpy.qos.ReliabilityPolicy.BEST_EFFORT, 
+            history=rclpy.qos.HistoryPolicy.KEEP_LAST , depth=1)
+        self.drive_publisher = self.create_publisher(AckermannDriveStamped, '/drive', qos_profile=qos_policy)
         self.cmd_timer = self.create_timer(simulation_time, self.drive_callback)
 
         self.odom_subscriber = self.create_subscription(Odometry, self.params.odom_topic, self.odom_callback, 10)
@@ -121,11 +127,29 @@ class DriveNode(Node):
             '/initialpose', 10)
 
         self.experiment_history = ExperimentHistory(self.params.results_directory)
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
 
         # self.delay_steps = self.params.delay_steps
         self.action_buffer = np.zeros((self.params.action_delay+1, 2))
-        self.position_buffer = np.zeros((self.params.delay_steps+1, 4))
+        self.position_buffer = np.zeros((self.params.delay_steps+1, 3))
         # self.current_position_time = time.time()
+
+        self.true_pos = np.zeros(2)
+        self.true_theta = 0.0
+
+    def broadcast_transform(self, pose):
+        transform = TransformStamped()
+        transform.header.stamp = self.get_clock().now().to_msg()
+        transform.header.frame_id = 'map'
+        transform.child_frame_id = 'vehicle'
+        transform.transform.translation.x = pose[0]
+        transform.transform.translation.y = pose[1]
+        transform.transform.translation.z = 0.0
+        transform.transform.rotation.x = 0.0
+        transform.transform.rotation.y = 0.0
+        transform.transform.rotation.z = np.sin(pose[2]/2)
+        transform.transform.rotation.w = np.cos(pose[2]/2)
+        self.tf_broadcaster.sendTransform(transform)
 
     def current_drive_callback(self, msg):
         # self.steering_angle = 0
@@ -134,19 +158,22 @@ class DriveNode(Node):
 
     def odom_callback(self, msg):
         pos_x, pos_y = msg.pose.pose.position.x, msg.pose.pose.position.y
-        speed = msg.twist.twist.linear.x
         x, y, z = quaternion_to_euler_angle(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z)
         theta = z * np.pi / 180
 
-        odom = np.array([pos_x, pos_y, theta, speed])
+        odom = np.array([pos_x, pos_y, theta])
         self.position_buffer = np.roll(self.position_buffer, -1, axis=0)
         self.position_buffer[-1] = odom
         current_odom = self.position_buffer[0]
 
         self.position = current_odom[:2]
         self.theta = current_odom[2]
-        self.velocity = current_odom[3]
+        # self.velocity = current_odom[3]
 
+        self.velocity = msg.twist.twist.linear.x
+
+        self.true_pos = np.array([pos_x, pos_y])
+        self.true_theta = theta
 
 
     # def odom_callback(self, msg):
@@ -188,7 +215,8 @@ class DriveNode(Node):
         if not self.running:
             return
 
-        if self.check_lap_done(self.position):
+        if self.check_lap_done(self.true_pos):
+        # if self.check_lap_done(self.position):
         # if self.check_lap_done_full_map(self.position):
             self.lap_done()
             return
@@ -196,8 +224,8 @@ class DriveNode(Node):
         observation = self.build_observation()
 
         action = self.calculate_action(observation)
-        self.steering_angle = 0.5 * self.steering_angle + 0.5* self.action_buffer[0, 0]
-        # self.steering_angle = 0.5 * self.steering_angle + 0.5* action[0]
+        # self.steering_angle = 0.5 * self.steering_angle + 0.5* self.action_buffer[0, 0]
+        self.steering_angle = 0.5 * self.steering_angle + 0.5* action[0]
 
         state = observation['state']
         self.experiment_history.add_data(state, action, self.scan)
@@ -250,6 +278,7 @@ class DriveNode(Node):
         if observation["scan"] is None: observation["scan"] = np.zeros(1080)
 
         state = np.array([self.position[0], self.position[1], self.theta, self.velocity, self.steering_angle])
+        self.broadcast_transform(state[:3])
         observation['state'] = state
         observation['reward'] = 0.0
 
@@ -288,7 +317,9 @@ class DriveNode(Node):
         """
             Check if the car has completed a lap
         """
+        # if position[1] < -10.5:
         if position[1] < -16.5:
+            print(f"Lap completed.....")
             return True
 
     def ego_reset(self):
@@ -301,6 +332,7 @@ class DriveNode(Node):
         msg.pose.pose.orientation.y = 0.0
         msg.pose.pose.orientation.z = 0.0
         msg.pose.pose.orientation.w = 1.0
+        self.broadcast_transform(np.zeros(3))
 
         self.ego_reset_pub.publish(msg)
 

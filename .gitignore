@@ -12,3 +12,5 @@ F1TenthRacingROS.egg-info
 PLOTS/*
 
 *.csv#
+
+Data/*
